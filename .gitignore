@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# 퀴즈 데이터는 개인 자료이므로 Git에서 제외됨
+src/data/quizzes/**/*.json

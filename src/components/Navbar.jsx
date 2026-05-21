@@ -1,26 +1,28 @@
-import { hasQuiz, NAV_LEVELS } from '../data/loadQuiz'
+import { NAV_LEVELS } from '../data/loadQuiz'
 
-function Navbar({ currentLevel, onLevelChange }) {
+function Navbar({ currentLevel, onLevelChange, onGoHome, isHome }) {
   return (
     <header className="navbar">
       <div className="navbar__inner">
-        <a href="/" className="navbar__brand">
+        <button
+          type="button"
+          className="navbar__brand"
+          onClick={onGoHome}
+          aria-current={isHome ? 'page' : undefined}
+        >
           YK 독일어
-        </a>
+        </button>
         <nav className="navbar__levels" aria-label="레벨 선택">
           {NAV_LEVELS.map((level) => {
-            const available = hasQuiz(level)
-            const isActive = level === currentLevel
+            const isActive = !isHome && level === currentLevel
 
             return (
               <button
                 key={level}
                 type="button"
-                className={`navbar__level${isActive ? ' navbar__level--active' : ''}${!available ? ' navbar__level--disabled' : ''}`}
-                onClick={() => available && onLevelChange(level)}
-                disabled={!available}
+                className={`navbar__level${isActive ? ' navbar__level--active' : ''}`}
+                onClick={() => onLevelChange(level)}
                 aria-current={isActive ? 'page' : undefined}
-                title={available ? undefined : '준비 중'}
               >
                 {level}
               </button>
