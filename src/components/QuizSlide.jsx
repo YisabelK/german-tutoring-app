@@ -1,3 +1,5 @@
+import { useRef } from 'react'
+
 const BLANK = '______________'
 
 function renderSentenceWithAnswers(question, showAnswer) {
@@ -30,15 +32,34 @@ function QuizSlide({
   question,
   inputs,
   onInputChange,
-  onCheck,
+  onSubmit,
+  onRevealAnswer,
   checked,
   isCorrect,
+  showAnswer,
   showVocabulary,
   onToggleVocabulary,
 }) {
+  const inputRefs = useRef([])
   const blankCount = Array.isArray(question.answer)
     ? question.answer.length
     : 1
+
+  const isLocked = checked && isCorrect
+  const showWrong = checked && !isCorrect
+
+  const handleKeyDown = (e, index) => {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    if (isLocked) return
+
+    if (index < blankCount - 1) {
+      inputRefs.current[index + 1]?.focus()
+      return
+    }
+
+    onSubmit()
+  }
 
   return (
     <section className="quiz-slide" aria-labelledby="quiz-title">
@@ -57,19 +78,23 @@ function QuizSlide({
       </header>
 
       <p className="quiz-slide__sentence">
-        {renderSentenceWithAnswers(question, checked)}
+        {renderSentenceWithAnswers(question, showAnswer)}
       </p>
       <p className="quiz-slide__hint">{question.hint}</p>
 
       <div className="quiz-slide__answer-area">
         {blankCount === 1 ? (
           <input
+            ref={(el) => {
+              inputRefs.current[0] = el
+            }}
             type="text"
             className="quiz-input"
             value={inputs[0] ?? ''}
             onChange={(e) => onInputChange(0, e.target.value)}
+            onKeyDown={(e) => handleKeyDown(e, 0)}
             placeholder="Antwort eingeben"
-            disabled={checked}
+            disabled={isLocked}
             autoComplete="off"
             spellCheck="false"
           />
@@ -78,12 +103,16 @@ function QuizSlide({
             {Array.from({ length: blankCount }, (_, i) => (
               <input
                 key={i}
+                ref={(el) => {
+                  inputRefs.current[i] = el
+                }}
                 type="text"
                 className="quiz-input"
                 value={inputs[i] ?? ''}
                 onChange={(e) => onInputChange(i, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, i)}
                 placeholder={`Antwort ${i + 1}`}
-                disabled={checked}
+                disabled={isLocked}
                 autoComplete="off"
                 spellCheck="false"
               />
@@ -91,24 +120,46 @@ function QuizSlide({
           </div>
         )}
 
-        {!checked && (
-          <button
-            type="button"
-            className="quiz-btn quiz-btn--primary"
-            onClick={onCheck}
-          >
-            정답 확인
-          </button>
+        {!isLocked && (
+          <div className="quiz-slide__actions">
+            <button
+              type="button"
+              className="quiz-btn quiz-btn--primary"
+              onClick={onSubmit}
+            >
+              정답 제출
+            </button>
+            {checked && (
+              <button
+                type="button"
+                className="quiz-btn quiz-btn--secondary"
+                onClick={onRevealAnswer}
+              >
+                정답 확인
+              </button>
+            )}
+          </div>
         )}
 
-        {checked && (
+        {showWrong && (
           <div
-            className={`quiz-slide__result ${isCorrect ? 'quiz-slide__result--correct' : 'quiz-slide__result--wrong'}`}
+            className="quiz-slide__result quiz-slide__result--wrong"
             role="status"
           >
-            <p className="quiz-slide__result-label">
-              {isCorrect ? '✓ 맞았습니다!' : '✗ 틀렸습니다.'}
+            <p className="quiz-slide__result-label">✗ 틀렸습니다.</p>
+            <p className="quiz-slide__result-hint">
+              답을 수정한 뒤 정답 제출을 다시 누르거나, 정답 확인으로 모범 답안을
+              볼 수 있습니다.
             </p>
+          </div>
+        )}
+
+        {isLocked && (
+          <div
+            className="quiz-slide__result quiz-slide__result--correct"
+            role="status"
+          >
+            <p className="quiz-slide__result-label">✓ 맞았습니다!</p>
           </div>
         )}
       </div>

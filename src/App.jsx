@@ -12,6 +12,7 @@ import {
   RECENT_QUIZZES,
 } from './data/loadQuiz'
 import { checkAnswer, createEmptyInputs } from './utils/checkAnswer'
+import { shuffleArray } from './utils/shuffleArray'
 import './App.css'
 
 const START_QUESTION_ID = 1
@@ -115,40 +116,57 @@ function App() {
 function QuizView({ quiz, onBackToList, currentLevel, onLevelChange, onGoHome }) {
   const { title, vocabulary, questions, level } = quiz
 
+  const [orderedQuestions, setOrderedQuestions] = useState(() => [...questions])
+
   const initialIndex = useMemo(
-    () => getInitialQuestionIndex(questions, START_QUESTION_ID),
-    [questions],
+    () => getInitialQuestionIndex(orderedQuestions, START_QUESTION_ID),
+    [orderedQuestions],
   )
 
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [inputs, setInputs] = useState(() =>
-    createEmptyInputs(questions[initialIndex].answer),
+    createEmptyInputs(orderedQuestions[initialIndex].answer),
   )
   const [checked, setChecked] = useState(false)
   const [isCorrect, setIsCorrect] = useState(false)
+  const [showAnswer, setShowAnswer] = useState(false)
   const [showVocabulary, setShowVocabulary] = useState(false)
 
   useEffect(() => {
-    const index = getInitialQuestionIndex(questions, START_QUESTION_ID)
+    const nextOrder = [...questions]
+    const index = getInitialQuestionIndex(nextOrder, START_QUESTION_ID)
+    setOrderedQuestions(nextOrder)
     setCurrentIndex(index)
-    setInputs(createEmptyInputs(questions[index].answer))
+    setInputs(createEmptyInputs(nextOrder[index].answer))
     setChecked(false)
     setIsCorrect(false)
+    setShowAnswer(false)
     setShowVocabulary(false)
   }, [questions])
 
-  const currentQuestion = questions[currentIndex]
+  const currentQuestion = orderedQuestions[currentIndex]
   const isFirst = currentIndex === 0
-  const isLast = currentIndex === questions.length - 1
+  const isLast = currentIndex === orderedQuestions.length - 1
 
   const resetForQuestion = useCallback(
     (index) => {
-      setInputs(createEmptyInputs(questions[index].answer))
+      setInputs(createEmptyInputs(orderedQuestions[index].answer))
       setChecked(false)
       setIsCorrect(false)
+      setShowAnswer(false)
     },
-    [questions],
+    [orderedQuestions],
   )
+
+  const handleShuffle = useCallback(() => {
+    const shuffled = shuffleArray(questions)
+    setOrderedQuestions(shuffled)
+    setCurrentIndex(0)
+    setInputs(createEmptyInputs(shuffled[0].answer))
+    setChecked(false)
+    setIsCorrect(false)
+    setShowAnswer(false)
+  }, [questions])
 
   const goTo = useCallback(
     (index) => {
@@ -174,11 +192,20 @@ function QuizView({ quiz, onBackToList, currentLevel, onLevelChange, onGoHome })
     })
   }
 
-  const handleCheck = () => {
+  const handleSubmit = () => {
     const correct = checkAnswer(inputs, currentQuestion.answer)
     setIsCorrect(correct)
     setChecked(true)
+    if (correct) {
+      setShowAnswer(true)
+    }
   }
+
+  const handleRevealAnswer = () => {
+    setShowAnswer(true)
+  }
+
+  const isAnsweredCorrect = checked && isCorrect
 
   const questionWithMeta = {
     ...currentQuestion,
@@ -203,9 +230,18 @@ function QuizView({ quiz, onBackToList, currentLevel, onLevelChange, onGoHome })
           >
             ← 퀴즈 목록
           </button>
-          <h1 id="quiz-title" className="quiz-app__title">
-            {title}
-          </h1>
+          <div className="quiz-app__title-row">
+            <h1 id="quiz-title" className="quiz-app__title">
+              {title}
+            </h1>
+            <button
+              type="button"
+              className="quiz-btn quiz-btn--ghost quiz-app__shuffle"
+              onClick={handleShuffle}
+            >
+              섞기
+            </button>
+          </div>
         </header>
 
         <div
@@ -216,33 +252,51 @@ function QuizView({ quiz, onBackToList, currentLevel, onLevelChange, onGoHome })
               question={questionWithMeta}
               inputs={inputs}
               onInputChange={handleInputChange}
-              onCheck={handleCheck}
+              onSubmit={handleSubmit}
+              onRevealAnswer={handleRevealAnswer}
               checked={checked}
               isCorrect={isCorrect}
+              showAnswer={showAnswer}
               showVocabulary={showVocabulary}
               onToggleVocabulary={() => setShowVocabulary((v) => !v)}
             />
 
-            <nav className="quiz-nav" aria-label="문제 이동">
-              <button
-                type="button"
-                className="quiz-btn quiz-btn--secondary"
-                onClick={handlePrev}
-                disabled={isFirst}
-              >
-                이전 문제
-              </button>
+            <nav
+              className={`quiz-nav${isAnsweredCorrect ? ' quiz-nav--correct-only' : ''}`}
+              aria-label="문제 이동"
+            >
+              {!isAnsweredCorrect && (
+                <button
+                  type="button"
+                  className="quiz-btn quiz-btn--secondary"
+                  onClick={handlePrev}
+                  disabled={isFirst}
+                >
+                  이전 문제
+                </button>
+              )}
               <span className="quiz-nav__progress">
-                {currentIndex + 1} / {questions.length}
+                {currentIndex + 1} / {orderedQuestions.length}
               </span>
-              <button
-                type="button"
-                className="quiz-btn quiz-btn--secondary"
-                onClick={handleNext}
-                disabled={isLast}
-              >
-                다음 문제
-              </button>
+              {isAnsweredCorrect ? (
+                <button
+                  type="button"
+                  className="quiz-btn quiz-btn--primary quiz-nav__next-only"
+                  onClick={handleNext}
+                  disabled={isLast}
+                >
+                  다음 문제
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="quiz-btn quiz-btn--secondary"
+                  onClick={handleNext}
+                  disabled={isLast}
+                >
+                  다음 문제
+                </button>
+              )}
             </nav>
           </main>
 
