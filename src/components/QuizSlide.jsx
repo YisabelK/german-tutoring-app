@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const BLANK = '______________'
 
@@ -41,12 +41,17 @@ function QuizSlide({
   onToggleVocabulary,
 }) {
   const inputRefs = useRef([])
+  const [showHint, setShowHint] = useState(false)
   const blankCount = Array.isArray(question.answer)
     ? question.answer.length
     : 1
 
   const isLocked = checked && isCorrect
   const showWrong = checked && !isCorrect
+
+  useEffect(() => {
+    setShowHint(false)
+  }, [question.id])
 
   const handleKeyDown = (e, index) => {
     if (e.key !== 'Enter') return
@@ -80,7 +85,19 @@ function QuizSlide({
       <p className="quiz-slide__sentence">
         {renderSentenceWithAnswers(question, showAnswer)}
       </p>
-      <p className="quiz-slide__hint">{question.hint}</p>
+      <div className="quiz-slide__hint-area">
+        <button
+          type="button"
+          className="quiz-slide__hint-toggle"
+          onClick={() => setShowHint((v) => !v)}
+          aria-expanded={showHint}
+        >
+          {showHint ? '힌트 숨기기' : '힌트 확인'}
+        </button>
+        {showHint && (
+          <p className="quiz-slide__hint">{question.hint}</p>
+        )}
+      </div>
 
       <div className="quiz-slide__answer-area">
         {blankCount === 1 ? (
