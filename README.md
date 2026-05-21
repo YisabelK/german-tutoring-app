@@ -1,22 +1,23 @@
-# React + Vite
+# YK German Tutoring
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A personal practice app for learning German vocabulary and exam-style fill-in-the-blank questions. Built for one-on-one tutoring sessions, with a slide-like UI that works well when sharing your screen in class.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Levels** — A1 through C1; browse quizzes by level
+- **Fill-in-the-blank** — Type answers in sentence gaps, submit, and reveal correct answers
+- **Vocabulary list** — Review word lists tied to each quiz
+- **Shuffle** — Randomize question order within a quiz
 
-## React Compiler
+## Getting started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+npm run dev
+```
 
-## Expanding the ESLint configuration
+## Quiz data (not in Git)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-# german-tutoring-app
+Quiz JSON files under `src/data/quizzes/` are **private study material** and are excluded from GitHub via `.gitignore`.
 
-## 퀴즈 데이터 (Git 제외)
-
-`src/data/quizzes/` 아래의 **`.json` 파일은 개인 자료**이므로 GitHub에 올라가지 않습니다.  
-자세한 내용과 로컬 설정 방법은 [`src/data/quizzes/README.md`](src/data/quizzes/README.md)를 참고하세요.
+To add a quiz locally, place a JSON file in the level folder (e.g. `c1/lesenTeil2.json`) and register it in that folder’s `index.js`.
